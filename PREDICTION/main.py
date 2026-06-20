@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import csv
 import datetime
-import time
 from pathlib import Path
 from typing import Iterable
 
@@ -177,19 +176,7 @@ def predict_for_all_grids(grid_blocks: list[tuple[float, float]]) -> None:
             continue
 
 
-def run_scheduler(interval_seconds: int = 120) -> None:
+if __name__ == "__main__":
     grid_blocks = read_grid_blocks(GRID_FILE)
     print(f"Loaded {len(grid_blocks)} grid blocks from {GRID_FILE}")
-
-    while True:
-        start = time.time()
-        predict_for_all_grids(grid_blocks)
-        elapsed = time.time() - start
-        sleep_time = max(0, interval_seconds - elapsed)
-        print(f"Cycle complete in {elapsed:.1f}s, sleeping {sleep_time:.1f}s")
-
-        time.sleep(sleep_time)
-
-
-if __name__ == "__main__":
-    run_scheduler(interval_seconds=120)
+    predict_for_all_grids(grid_blocks)
