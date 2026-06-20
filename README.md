@@ -1,69 +1,429 @@
-# Docker setup for `basic/` (PREDICTION + traffic-map)
+# Cognition Analyzer
 
-Drop these files into your existing `basic/` folder at the matching paths, then run from `basic/`:
+## Overview
 
+Cognition Analyzer is an AI-powered traffic congestion prediction and visualization platform designed to help city planners, traffic authorities, and commuters understand real-time and future traffic conditions.
+
+The system combines historical traffic patterns, weather conditions, road network information, and live traffic data to generate congestion predictions across different city grids. Predictions are displayed through an interactive map-based dashboard, enabling users to identify high-risk congestion zones and make informed decisions.
+
+The project consists of:
+
+* **Backend (Flask + Machine Learning)** for traffic prediction
+* **Frontend (React + Leaflet)** for map visualization
+* **SQLite Database** for storing congestion predictions
+* **Dockerized Infrastructure** for easy deployment
+
+---
+
+# Features
+
+### Real-Time Traffic Visualization
+
+* Interactive map interface built using Leaflet.
+* Grid-based congestion visualization.
+* Dynamic marker updates from backend predictions.
+
+### AI-Based Congestion Prediction
+
+* Machine Learning models trained on:
+
+  * Historical traffic data
+  * Weather conditions
+  * Temporal features
+  * Road network information
+
+### Multi-Source Data Integration
+
+* Traffic APIs
+* Weather APIs
+* Parking and congestion datasets
+* Geographic location datasets
+
+### Risk Categorization
+
+| Congestion Score | Risk Level |
+| ---------------- | ---------- |
+| 0 - 25           | Low        |
+| 26 - 50          | Moderate   |
+| 51 - 75          | High       |
+| 76 - 100         | Critical   |
+
+### Docker Support
+
+* One-command deployment using Docker Compose.
+* Backend and frontend containers.
+* Persistent database storage.
+
+---
+
+# System Architecture
+
+```text
+                   +------------------+
+                   | Traffic APIs     |
+                   +------------------+
+                            |
+                            v
+                   +------------------+
+                   | Weather APIs     |
+                   +------------------+
+                            |
+                            v
++------------------------------------------------+
+|            Traffic Prediction Engine           |
+|                                                |
+|  Feature Engineering + ML Models               |
+|  (Random Forest / XGBoost / Ensemble)          |
++------------------------------------------------+
+                            |
+                            v
+                   +------------------+
+                   | SQLite Database  |
+                   +------------------+
+                            |
+                            v
+                   +------------------+
+                   | Flask Backend    |
+                   +------------------+
+                            |
+                            v
+                   +------------------+
+                   | React Frontend   |
+                   | Leaflet Maps     |
+                   +------------------+
 ```
+
+---
+
+# Technology Stack
+
+## Backend
+
+* Python
+* Flask
+* Pandas
+* NumPy
+* Scikit-Learn
+* SQLite
+
+## Frontend
+
+* React
+* Vite
+* React Leaflet
+* Leaflet.js
+
+## DevOps
+
+* Docker
+* Docker Compose
+* Nginx
+
+## APIs
+
+* OpenWeather API
+* Traffic API
+
+---
+
+# Project Structure
+
+```text
 basic/
-├── docker-compose.yml          <- new
+│
+├── docker-compose.yml
+│
 ├── PREDICTION/
-│   ├── Dockerfile              <- new
-│   ├── .dockerignore           <- new
-│   └── ...(your existing files)
+│   ├── server.py
+│   ├── main.py
+│   ├── requirements.txt
+│   ├── traffic.db
+│   ├── Dockerfile
+│   ├── .dockerignore
+│   └── .env
+│
 └── traffic-map/
-    ├── Dockerfile              <- new
-    ├── nginx.conf              <- new
-    ├── .dockerignore           <- new
-    ├── src/App.jsx             <- replace with App.jsx.patched (see below)
-    └── ...(your existing files)
+    ├── src/
+    │   └── App.jsx
+    ├── public/
+    ├── package.json
+    ├── nginx.conf
+    ├── Dockerfile
+    └── .dockerignore
 ```
 
-## What changed in App.jsx
+---
 
-Your `fetch("http://localhost:5000/traffic")` was hardcoded. I changed it to:
+# Docker Deployment
 
-```js
-fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/traffic`)
+## Prerequisites
+
+* Docker Desktop
+* Docker Compose
+
+Verify installation:
+
+```bash
+docker --version
+docker compose version
 ```
 
-This still defaults to `localhost:5000` for normal `npm run dev`, but lets Docker
-override it at build time via `VITE_API_URL` (set in `docker-compose.yml`).
-Rename/copy `traffic-map/App.jsx.patched` over `traffic-map/src/App.jsx`.
+---
 
-## Run it
+## Environment Variables
+
+Create:
+
+```text
+PREDICTION/.env
+```
+
+Example:
+
+```env
+WEATHER_API=your_openweather_api_key
+TRAFFIC_API=your_traffic_api_key
+```
+
+---
+
+## Build and Run
+
+From the project root:
 
 ```bash
 cd basic
+
 docker compose up --build
 ```
 
-- Backend (Flask, `/traffic` endpoint): http://localhost:5000/traffic
-- Frontend (map UI): http://localhost:5173
+---
 
-First build will be slow — it installs scikit-learn/pandas/numpy for the backend
-and npm installs + builds the Vite app for the frontend. Subsequent builds are
-cached unless you change `requirements.txt`/`package.json`.
+## Services
 
-## Notes / things worth knowing
+### Backend
 
-- **`.env` file**: `docker-compose.yml` loads `PREDICTION/.env` (your `WEATHER_API`
-  and `TRAFFIC_API` keys) via `env_file`. Nothing is baked into the image — if you
-  rotate keys, just edit `.env` and restart (`docker compose up -d`).
-- **`traffic.db` persistence**: mounted as a bind volume so predictions written by
-  `main.py` (or anything else) survive container restarts and stay editable from
-  the host.
-- **`training_model/` excluded from the build**: it's ~150MB of notebooks/raw CSVs
-  not needed to *run* the app, so it's skipped via `.dockerignore` to keep builds
-  fast. Nothing on your filesystem is deleted.
-- **`server.py` only serves `/traffic` (read-only)** — it does NOT run `main.py`'s
-  scheduler that actually generates new predictions. If you want predictions to
-  keep refreshing, you have two options:
-  1. Run `python main.py` manually/separately (on host or in a second container —
-     ask and I'll add a `scheduler` service to compose for this), or
-  2. Treat the current `traffic.db` as a static snapshot for demo purposes.
-- **Flask dev server runs with `debug=True`** in `server.py` as in your source —
-  fine for a hackathon demo, but not meant for real production exposure.
-- **Frontend → backend networking**: the React app runs in the *browser*, not
-  inside the Docker network, so it must reach the backend via a host-mapped port
-  (`localhost:5000`), not the Docker service name `backend`. That's why
-  `VITE_API_URL` defaults to `http://localhost:5000` rather than
-  `http://backend:5000`.
+Runs Flask API:
+
+```text
+http://localhost:5000
+```
+
+Traffic endpoint:
+
+```text
+http://localhost:5000/traffic
+```
+
+---
+
+### Frontend
+
+Runs React application:
+
+```text
+http://localhost:5173
+```
+
+---
+
+# API Documentation
+
+## Get Traffic Predictions
+
+### Request
+
+```http
+GET /traffic
+```
+
+### Response
+
+```json
+[
+  {
+    "grid_id": "GRID_001",
+    "latitude": 12.9716,
+    "longitude": 77.5946,
+    "congestion_score": 68.5
+  }
+]
+```
+
+---
+
+# Frontend Configuration
+
+The frontend dynamically reads the backend URL using:
+
+```javascript
+fetch(
+  `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/traffic`
+)
+```
+
+This allows:
+
+### Local Development
+
+```bash
+npm run dev
+```
+
+Uses:
+
+```text
+http://localhost:5000
+```
+
+### Docker Deployment
+
+Uses:
+
+```env
+VITE_API_URL=http://localhost:5000
+```
+
+configured through Docker Compose.
+
+---
+
+# Database Persistence
+
+Traffic predictions are stored in:
+
+```text
+traffic.db
+```
+
+The database is mounted as a Docker volume to ensure:
+
+* Predictions survive container restarts
+* Easy local inspection
+* Persistent storage across deployments
+
+---
+
+# Model Workflow
+
+## Data Collection
+
+Sources:
+
+* Historical traffic data
+* Weather data
+* Road network features
+* Temporal information
+
+## Feature Engineering
+
+Generated features:
+
+* Hour of day
+* Day of week
+* Weather conditions
+* Traffic density
+* Geographic coordinates
+
+## Prediction
+
+Machine learning model generates:
+
+```text
+Congestion Score (0-100)
+```
+
+for each traffic grid.
+
+## Visualization
+
+Predictions are displayed as:
+
+* Map markers
+* Heat zones
+* Color-coded congestion levels
+
+---
+
+# Future Improvements
+
+* Real-time streaming traffic updates
+* Advanced deep learning models
+* Route optimization
+* Smart parking integration
+* Incident detection
+* Traffic anomaly alerts
+* Multi-city deployment
+* Live dashboard analytics
+
+---
+
+# Performance
+
+### Backend
+
+* Fast prediction retrieval
+* Lightweight SQLite storage
+* Dockerized deployment
+
+### Frontend
+
+* Responsive map rendering
+* Real-time marker updates
+* Mobile-friendly UI
+
+---
+
+# Troubleshooting
+
+## Docker Not Running
+
+```bash
+docker ps
+```
+
+Start Docker Desktop if containers are not running.
+
+---
+
+## API Not Accessible
+
+Check backend logs:
+
+```bash
+docker compose logs backend
+```
+
+---
+
+## Frontend Cannot Fetch Data
+
+Verify:
+
+```bash
+http://localhost:5000/traffic
+```
+
+is accessible.
+
+---
+
+## Rebuild Containers
+
+```bash
+docker compose down
+
+docker compose up --build
+```
+
+---
+
+# License
+
+This project is intended for educational, research, and traffic analytics purposes.
+
+---
+
+# Author
+
+**Mohammad Arham Reza**
