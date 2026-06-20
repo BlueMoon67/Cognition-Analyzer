@@ -147,7 +147,7 @@ export default function App() {
   // ── Fetch traffic data ──────────────────────────────────────────────────
   console.log("API URL:", import.meta.env.VITE_API_URL);
   const fetchData = useCallback(() => {
-    fetch(`${import.meta.env.VITE_API_URL || "https://cognition-analyzer-production.up.railway.app"}/traffic`)
+    fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/traffic`)
       .then((res) => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json(); })
       .then((data) => {
         setPoints(Array.isArray(data) ? data.map(parsePoint) : []);
