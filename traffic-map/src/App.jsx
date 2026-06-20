@@ -143,7 +143,7 @@ export default function App() {
   // selected police station → nearest grid panel
   const [selectedStation, setSelectedStation] = useState(null); // { name, lat, lon }
   const [nearestGrids, setNearestGrids]       = useState([]);   // top-10 sorted by dist
-
+  console.log("API URL:", import.meta.env.VITE_API_URL);
   // ── Fetch traffic data ──────────────────────────────────────────────────
   const fetchData = useCallback(() => {
     fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/traffic`)
