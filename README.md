@@ -14,6 +14,7 @@ The project consists of:
 * **Dockerized Infrastructure** for easy deployment
 
 ---
+<img width="1536" height="1024" alt="ChatGPT Image Jun 20, 2026, 07_52_59 PM" src="https://github.com/user-attachments/assets/411b4472-9bb1-43ce-b43b-dd336b65cd46" />
 
 # Features
 
