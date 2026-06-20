@@ -157,6 +157,7 @@ def predict_for_all_grids(grid_blocks: list[tuple[float, float]]) -> None:
                     score_count,
                 ],
             )
+            print(f"🔵 About to save {grid_id}")
             grid_id = f"{lat:.6f}_{lon:.6f}"
             save_prediction(
             grid_id=grid_id,
