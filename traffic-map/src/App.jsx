@@ -145,8 +145,9 @@ export default function App() {
   const [nearestGrids, setNearestGrids]       = useState([]);   // top-10 sorted by dist
 
   // ── Fetch traffic data ──────────────────────────────────────────────────
+  console.log("API URL:", import.meta.env.VITE_API_URL);
   const fetchData = useCallback(() => {
-    fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/traffic`)
+    fetch(`${import.meta.env.VITE_API_URL || "https://cognition-analyzer-production.up.railway.app"}/traffic`)
       .then((res) => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json(); })
       .then((data) => {
         setPoints(Array.isArray(data) ? data.map(parsePoint) : []);
@@ -433,122 +434,123 @@ export default function App() {
       {/* ── RIGHT PANEL — Nearest Grids ── */}
       {rightPanelOpen && (
         <div style={{
-          position: "fixed", top: 0, right: 0, width: "320px", height: "100vh",
-          backgroundColor: "#0f172a",
-          borderLeft: "1px solid #1e293b",
-          boxShadow: "-4px 0 20px rgba(0,0,0,0.4)",
+          position: "fixed", top: 0, right: 0, width: "400px", height: "100vh",
+          backgroundColor: "white",
+          borderLeft: "1px solid #ddd",
+          boxShadow: "-2px 0 10px rgba(0,0,0,0.08)",
           display: "flex", flexDirection: "column", zIndex: 500,
-          fontFamily: "system-ui, sans-serif",
         }}>
           {/* Header */}
           <div style={{
             padding: "14px 16px",
-            background: "linear-gradient(135deg, #7f1d1d 0%, #1e3a5f 100%)",
-            borderBottom: "1px solid #374151",
+            backgroundColor: "#f5f7fb",
+            borderBottom: "1px solid #e5e7eb",
             display: "flex", alignItems: "flex-start", justifyContent: "space-between",
           }}>
             <div>
-              <div style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "4px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
                 <span style={{ fontSize: "18px" }}>🛡️</span>
-                <span style={{ color: "white", fontWeight: "700", fontSize: "13px" }}>
-                  {selectedStation.name}
-                </span>
-              </div>
-              <div style={{ color: "#94a3b8", fontSize: "11px" }}>
-                {selectedStation.lat.toFixed(5)}, {selectedStation.lon.toFixed(5)}
+                <div>
+                  <div style={{ color: "#111827", fontWeight: "700", fontSize: "14px" }}>
+                    {selectedStation.name}
+                  </div>
+                  <div style={{ color: "#475569", fontSize: "12px" }}>
+                    {selectedStation.lat.toFixed(5)}, {selectedStation.lon.toFixed(5)}
+                  </div>
+                </div>
               </div>
               <div style={{
-                marginTop: "8px", display: "inline-flex", alignItems: "center", gap: "5px",
-                background: "rgba(239,68,68,0.2)", border: "1px solid rgba(239,68,68,0.4)",
-                borderRadius: "4px", padding: "3px 8px",
+                marginTop: "8px", display: "inline-flex", alignItems: "center", gap: "6px",
+                background: "rgba(219,234,254,0.8)", border: "1px solid #bfdbfe",
+                borderRadius: "6px", padding: "5px 10px",
               }}>
-                <span style={{ width: "8px", height: "8px", borderRadius: "2px", backgroundColor: "#ef4444", display: "inline-block" }} />
-                <span style={{ color: "#fca5a5", fontSize: "11px", fontWeight: "600" }}>10 Nearest Grid Zones</span>
+                <span style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#2563eb", display: "inline-block" }} />
+                <span style={{ color: "#1d4ed8", fontSize: "12px", fontWeight: "600" }}>Nearest 10 grids</span>
               </div>
             </div>
             <button
               onClick={() => { setSelectedStation(null); setNearestGrids([]); }}
               style={{
-                background: "rgba(255,255,255,0.1)", border: "none", borderRadius: "4px",
-                color: "#94a3b8", cursor: "pointer", padding: "4px",
+                background: "#e5e7eb", border: "none", borderRadius: "6px",
+                color: "#334155", cursor: "pointer", padding: "6px",
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}
               title="Close"
             >
-              <X size={16} />
+              <X size={18} />
             </button>
           </div>
 
           {/* Grid list */}
-          <div style={{ flex: 1, overflowY: "auto" }}>
-            {nearestGrids.map((point, i) => (
+          <div style={{ flex: 1, overflowY: "auto", backgroundColor: "#ffffff" }}>
+            {nearestGrids.length === 0 ? (
+              <div style={{ padding: "18px 16px", color: "#64748b", fontSize: "13px" }}>
+                Select a police station marker to view nearest grid zones.
+              </div>
+            ) : nearestGrids.map((point, i) => (
               <div
                 key={`nearest-${i}`}
                 style={{
-                  padding: "12px 16px",
-                  borderBottom: "1px solid #1e293b",
-                  backgroundColor: i === 0 ? "rgba(239,68,68,0.12)" : i % 2 === 0 ? "#0f172a" : "#111827",
-                  transition: "background 0.15s",
+                  padding: "14px 16px",
+                  borderBottom: "1px solid #f0f0f0",
+                  backgroundColor: i % 2 === 0 ? "#fafafa" : "#ffffff",
                 }}
               >
-                {/* Rank + score */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    {/* Red block badge */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", marginBottom: "8px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                     <div style={{
-                      width: "20px", height: "20px",
-                      backgroundColor: "#ef4444",
-                      borderRadius: "3px",
+                      width: "26px", height: "26px",
+                      backgroundColor: "#2563eb",
+                      borderRadius: "8px",
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      flexShrink: 0,
+                      color: "white", fontSize: "12px", fontWeight: "700",
                     }}>
-                      <span style={{ color: "white", fontSize: "10px", fontWeight: "700" }}>{i + 1}</span>
+                      {i + 1}
                     </div>
-                    <span style={{ color: "#f1f5f9", fontSize: "12px", fontWeight: "600" }}>
-                      Score: {point.final_score.toFixed(4)}
-                    </span>
+                    <div>
+                      <div style={{ color: "#0f172a", fontWeight: "700", fontSize: "13px" }}>
+                        {point.final_score.toFixed(4)}
+                      </div>
+                      <div style={{ color: "#64748b", fontSize: "11px" }}>Traffic risk score</div>
+                    </div>
                   </div>
                   <span style={{
                     backgroundColor: getColorForScore(point.final_score),
-                    color: "white", fontSize: "10px", fontWeight: "600",
-                    padding: "2px 7px", borderRadius: "10px",
+                    color: "white", fontSize: "10px", fontWeight: "700",
+                    padding: "4px 10px", borderRadius: "999px",
                   }}>
                     {point.final_score >= 1.6 ? "Critical"
                       : point.final_score >= 1.2 ? "High"
-                      : point.final_score >= 1   ? "Medium"
+                      : point.final_score >= 1 ? "Medium"
                       : point.final_score >= 0.4 ? "Low"
                       : "Clear"}
                   </span>
                 </div>
 
-                {/* Distance */}
-                <div style={{ display: "flex", alignItems: "center", gap: "5px", marginBottom: "5px" }}>
-                  <MapPin size={11} color="#f97316" />
-                  <span style={{ color: "#f97316", fontSize: "12px", fontWeight: "600" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
+                  <MapPin size={14} color="#fb923c" />
+                  <span style={{ color: "#334155", fontSize: "12px", fontWeight: "600" }}>
                     {formatDist(point.dist)}
                   </span>
-                  <span style={{ color: "#475569", fontSize: "11px" }}>from station</span>
+                  <span style={{ color: "#94a3b8", fontSize: "11px" }}>from station</span>
                 </div>
 
-                {/* Coords */}
-                <div style={{ color: "#64748b", fontSize: "10px", marginBottom: "5px" }}>
+                <div style={{ color: "#64748b", fontSize: "12px", marginBottom: "10px" }}>
                   {point.lat.toFixed(5)}, {point.lon.toFixed(5)}
                 </div>
 
-                {/* Mini stats row */}
-                <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "8px" }}>
                   {[
                     { label: "Vol", value: point.traffic_volume },
                     { label: "Veh", value: point.number_vehicle },
                     { label: "Viol", value: point.violation_score.toFixed(3) },
                   ].map(({ label, value }) => (
                     <div key={label} style={{
-                      background: "#1e293b", borderRadius: "4px",
-                      padding: "2px 7px", fontSize: "10px",
-                      display: "flex", gap: "4px",
+                      background: "#f8fafc", border: "1px solid #e2e8f0",
+                      borderRadius: "8px", padding: "8px 10px", fontSize: "11px",
                     }}>
-                      <span style={{ color: "#64748b" }}>{label}</span>
-                      <span style={{ color: "#cbd5e1", fontWeight: "600" }}>{value}</span>
+                      <div style={{ color: "#64748b", marginBottom: "2px" }}>{label}</div>
+                      <div style={{ color: "#0f172a", fontWeight: "700" }}>{value}</div>
                     </div>
                   ))}
                 </div>
@@ -558,14 +560,14 @@ export default function App() {
 
           {/* Footer summary */}
           <div style={{
-            padding: "10px 16px",
-            borderTop: "1px solid #1e293b",
-            backgroundColor: "#0a0f1a",
-            fontSize: "11px", color: "#475569",
-            display: "flex", justifyContent: "space-between",
+            padding: "12px 16px",
+            borderTop: "1px solid #e5e7eb",
+            backgroundColor: "#f8fafc",
+            fontSize: "12px", color: "#475569",
+            display: "flex", justifyContent: "space-between", alignItems: "center",
           }}>
-            <span>Avg distance</span>
-            <span style={{ color: "#94a3b8", fontWeight: "600" }}>
+            <span>Average distance</span>
+            <span style={{ color: "#0f172a", fontWeight: "700" }}>
               {nearestGrids.length > 0
                 ? formatDist(nearestGrids.reduce((s, p) => s + p.dist, 0) / nearestGrids.length)
                 : "—"}

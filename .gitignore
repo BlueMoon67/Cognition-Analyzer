@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+traffic-map/node_modules/
+
+# Environment files
+.env
+.env.*
+traffic-map/.env
+traffic-map/.env.*
+
+# Build outputs
+dist/
+build/
+
+# Logs
+*.log
